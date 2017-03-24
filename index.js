@@ -46,24 +46,26 @@ module.exports = React.createClass({
         this.lastTop = 0;
         this.listRecord = [];
         return {
-            y: 0,
-            mounted: false,
+            y: -this.props.scrollOffset,
+            mounted: this.totalHeight <= this.props.panelHeight,
         };
     },
     componentDidMount() {
-        this.scrollView.scrollTo({y:(this.maxSize-2)*this.props.height});
-        setTimeout(()=>{
-            this.setState({mounted: true});
-        }, 100);
+        if (!this.state.mounted) {
+            setTimeout(()=>{
+                this.scrollView.scrollToEnd({animated: false});
+                setTimeout(()=>{
+                    this.setState({mounted: true});
+                }, 100);
+            }, 100);
+        }
     },
     onScroll({nativeEvent}) {
-        this.setState({y: nativeEvent.contentOffset.y-this.props.height*2});
+        this._touchStarted = false;
+        this.setState({y: nativeEvent.contentOffset.y-this.props.scrollOffset});
     },
     onTouchStart() {
         this._touchStarted = true;
-    },
-    onTouchMove() {
-        this._touchStarted = false;
     },
     onTouchEnd(e) {
         if (this._touchStarted) {
@@ -130,7 +132,7 @@ module.exports = React.createClass({
                 type = 1;
             } else {
                 h = w/panelWidth*height;
-                top = Math.pow(offset, 2)*(0.04)*panelHeight;
+                top = Math.pow(offset, 2)*0.04*panelHeight;
             }
         }
         this.lastTop = top;
@@ -164,9 +166,8 @@ module.exports = React.createClass({
                         showsVerticalScrollIndicator={false}
                         onScroll={this.onScroll}
                         onTouchStart={this.onTouchStart}
-                        onTouchMove={this.onTouchMove}
                         onTouchEnd={this.onTouchEnd}
-                        scrollEventThrottle ={100}
+                        scrollEventThrottle ={20}
                         >
                         <View style={{height: this.totalHeight}} />
                     </ScrollView>
