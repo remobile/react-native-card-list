@@ -1,48 +1,48 @@
 'use strict';
 
-var React = require('react');
-var ReactNative = require('react-native');
-var {
+const React = require('react');
+const ReactNative = require('react-native');
+const {
     StyleSheet,
     View,
     ScrollView,
     Animated,
 } = ReactNative;
 
-var Card = React.createClass({
-    getInitialState() {
-        const {height, width, top, marginLeft} = this.props;
+const Card = React.createClass({
+    getInitialState () {
+        const { height, width, top, marginLeft } = this.props;
         return {
             _height: new Animated.Value(height),
             _width: new Animated.Value(width),
             _top: new Animated.Value(top),
-            _marginLeft: new Animated.Value(marginLeft)
+            _marginLeft: new Animated.Value(marginLeft),
         };
     },
-    componentWillReceiveProps(nextProps) {
-        const {_width, _height, _top, _marginLeft} = this.state;
+    componentWillReceiveProps (nextProps) {
+        const { _width, _height, _top, _marginLeft } = this.state;
         _width.setValue(nextProps.width);
         _height.setValue(nextProps.height);
         _top.setValue(nextProps.top);
         _marginLeft.setValue(nextProps.marginLeft);
     },
-    render() {
-        const {mounted, renderRow} = this.props;
-        const {_width: width, _height: height, _top: top, _marginLeft: marginLeft} = this.state;
+    render () {
+        const { mounted, renderRow } = this.props;
+        const { _width: width, _height: height, _top: top, _marginLeft: marginLeft } = this.state;
         return (
             mounted ?
-            <Animated.View style={[styles.card, {height, width, top, marginLeft}]}>
-                {renderRow(this.props.width, this.props.height)}
-            </Animated.View>
+                <Animated.View style={[styles.card, { height, width, top, marginLeft }]}>
+                    {renderRow(this.props.width, this.props.height)}
+                </Animated.View>
             : null
         );
-    }
+    },
 });
 
 module.exports = React.createClass({
-    getInitialState() {
+    getInitialState () {
         this.maxSize = this.props.list.length;
-        this.totalHeight = this.maxSize*this.props.height;
+        this.totalHeight = this.maxSize * this.props.height;
         this.lastTop = 0;
         this.listRecord = [];
         return {
@@ -50,32 +50,32 @@ module.exports = React.createClass({
             mounted: this.totalHeight <= this.props.panelHeight,
         };
     },
-    componentDidMount() {
+    componentDidMount () {
         if (!this.state.mounted) {
-            setTimeout(()=>{
-                this.scrollView.scrollToEnd({animated: false});
-                setTimeout(()=>{
-                    this.setState({mounted: true});
+            setTimeout(() => {
+                this.scrollView.scrollToEnd({ animated: false });
+                setTimeout(() => {
+                    this.setState({ mounted: true });
                 }, 100);
             }, 100);
         }
     },
-    onScroll({nativeEvent}) {
+    onScroll ({ nativeEvent }) {
         this._touchStarted = false;
-        this.setState({y: nativeEvent.contentOffset.y-this.props.scrollOffset});
+        this.setState({ y: nativeEvent.contentOffset.y - this.props.scrollOffset });
     },
-    onTouchStart() {
+    onTouchStart () {
         this._touchStarted = true;
     },
-    onTouchEnd(e) {
+    onTouchEnd (e) {
         if (this._touchStarted) {
             this.clickCard(e.nativeEvent);
         }
         this._touchStarted = false;
     },
-    clickCard(e) {
-        const {offsetLeft, offsetTop, onClickCard} = this.props;
-        let {pageX, pageY} = e;
+    clickCard (e) {
+        const { offsetLeft, offsetTop, onClickCard } = this.props;
+        let { pageX, pageY } = e;
         pageX -= offsetLeft;
         pageY -= offsetTop;
         const list = this.listRecord;
@@ -93,7 +93,7 @@ module.exports = React.createClass({
                     break;
                 }
                 if (pageY > lastItem.top && pageY < item.top) {
-                    selectIndex = i-1;
+                    selectIndex = i - 1;
                     break;
                 } else {
                     lastItem = item;
@@ -110,74 +110,74 @@ module.exports = React.createClass({
             }
         }
     },
-    getCardPosition(i, height, y, panelHeight, panelWidth) {
-        let offset = i - y/height;
+    getCardPosition (i, height, y, panelHeight, panelWidth) {
+        let offset = i - y / height;
         let h, w, top, type = 0;
         if (offset < 0) {
             w = 0;
             h = 0;
             top = 0;
             type = -1;
-            if (offset+1 > 0) {
-                w = panelWidth/2;
-                h = panelWidth/2;
+            if (offset + 1 > 0) {
+                w = panelWidth / 2;
+                h = panelWidth / 2;
                 type = 0;
             }
         } else {
-            w = (offset*0.2+1)*panelWidth/2;
+            w = (offset * 0.2 + 1) * panelWidth / 2;
             if (w > panelWidth) {
                 w = 0;
                 h = 0;
                 top = 0;
                 type = 1;
             } else {
-                h = w/panelWidth*height;
-                top = Math.pow(offset, 2)*0.04*panelHeight;
+                h = w / panelWidth * height;
+                top = Math.pow(offset, 2) * 0.04 * panelHeight;
             }
         }
         this.lastTop = top;
-        let pos = {left: (panelWidth-w)/2, top, right: (panelWidth+w)/2, bottom: h+top, type};
+        let pos = { left: (panelWidth - w) / 2, top, right: (panelWidth + w) / 2, bottom: h + top, type };
         this.listRecord[i] = pos;
         return {
             height: h,
             width: w,
             top: top,
             marginLeft: pos.left,
-        }
+        };
     },
-    render() {
-        const {list, height, panelHeight, panelWidth, renderRow} = this.props;
-        const {y, mounted} = this.state;
+    render () {
+        const { list, height, panelHeight, panelWidth, renderRow } = this.props;
+        const { y, mounted } = this.state;
         return (
-            <View style={{flex: 1}}>
+            <View style={{ flex: 1 }}>
                 <View style={styles.cardContainer}>
                     {
-                        list.map((item, i)=>{
+                        list.map((item, i) => {
                             const position = this.getCardPosition(i, height, y, panelHeight, panelWidth);
                             return (
-                                <Card key={i} {...position} mounted={mounted} renderRow={renderRow.bind(null, item, i)}/>
-                            )
+                                <Card key={i} {...position} mounted={mounted} renderRow={renderRow.bind(null, item, i)} />
+                            );
                         })
                     }
                 </View>
-                <View style={{flex: 1}}>
+                <View style={{ flex: 1 }}>
                     <ScrollView
-                        ref={(ref)=>{this.scrollView = ref}}
+                        ref={(ref) => { this.scrollView = ref; }}
                         showsVerticalScrollIndicator={false}
                         onScroll={this.onScroll}
                         onTouchStart={this.onTouchStart}
                         onTouchEnd={this.onTouchEnd}
-                        scrollEventThrottle ={20}
+                        scrollEventThrottle={20}
                         >
-                        <View style={{height: this.totalHeight}} />
+                        <View style={{ height: this.totalHeight }} />
                     </ScrollView>
                 </View>
             </View>
         );
-    }
-})
+    },
+});
 
-var styles = StyleSheet.create({
+const styles = StyleSheet.create({
     cardContainer: {
         position: 'absolute',
         top: 0,
